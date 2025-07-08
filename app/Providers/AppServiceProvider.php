@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Policies\RolePolicy;
 use App\Policies\PermissionPolicy;
+use Illuminate\Database\Eloquent\Model;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -24,6 +25,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Model::unguard();
         Gate::policy(Permission::class, PermissionPolicy::class);
         Gate::policy(Role::class, RolePolicy::class);
     }
