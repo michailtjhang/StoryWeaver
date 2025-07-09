@@ -78,13 +78,20 @@ class StoryResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make()
+                    ->visible(fn() => auth()->user()->hasRole('Admin'))
+                    ->requiresConfirmation()
+                    ->successNotificationTitle('Story deleted successfully')
+                    ->failureNotificationTitle('Failed to delete story')
+                    ->icon('heroicon-o-trash'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                     Tables\Actions\ForceDeleteBulkAction::make(),
                     Tables\Actions\RestoreBulkAction::make(),
-                ]),
+                ])
+                ->visible(fn() => auth()->user()->hasRole('Admin')),
             ]);
     }
 
