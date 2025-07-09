@@ -110,6 +110,9 @@ class StoryResource extends Resource
         return parent::getEloquentQuery()
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
-            ]);
+            ])
+            ->when(auth()->user()->hasRole('Writer'), function (Builder $query) {
+                $query->where('author_id', auth()->user()->id);
+            });
     }
 }
