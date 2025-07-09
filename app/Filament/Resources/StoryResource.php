@@ -90,9 +90,7 @@ class StoryResource extends Resource
                     ->visible(fn(Story $record) => auth()->user()->hasRole('Reviewer') && $record->status === 'waiting for review')
                     ->requiresConfirmation()
                     ->action(function (Story $record) {
-                        // Logic for reviewing the story
-                        // This could be a redirect to a review page or an update of the status
-                        $record->update(['status' => 'in review']);
+                        $record->update(['status' => 'in review', 'reviewer_id' => auth()->user()->id]);
                         return redirect(static::getUrl('view', ['record' => $record]))
                             ->with('success', 'Story is now under review');
                     }),
