@@ -22,6 +22,7 @@ class ListStories extends ListRecords
     public function getTabs(): array
     {
         return [
+            'all' => Tab::make(),
             'waiting for review' => Tab::make()
                 ->modifyQueryUsing(fn(Builder $query) => $query->where('status', 'waiting for review')),
             'in review' => Tab::make()

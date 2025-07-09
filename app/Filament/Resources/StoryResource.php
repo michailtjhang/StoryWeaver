@@ -56,7 +56,7 @@ class StoryResource extends Resource
                 Tables\Columns\TextColumn::make('author.name')
                     ->sortable()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('reviewer_id')
+                Tables\Columns\TextColumn::make('reviewer.name')
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
@@ -84,6 +84,18 @@ class StoryResource extends Resource
                     ->successNotificationTitle('Story deleted successfully')
                     ->failureNotificationTitle('Failed to delete story')
                     ->icon('heroicon-o-trash'),
+                Tables\Actions\Action::make('review')
+                    ->label('Review')
+                    ->icon('heroicon-o-pencil-square')
+                    ->visible(fn(Story $record) => auth()->user()->hasRole('Reviewer') && $record->status === 'waiting for review')
+                    ->requiresConfirmation()
+                    ->action(function (Story $record) {
+                        // Logic for reviewing the story
+                        // This could be a redirect to a review page or an update of the status
+                        $record->update(['status' => 'in review']);
+                        return redirect(static::getUrl('view', ['record' => $record]))
+                            ->with('success', 'Story is now under review');
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
