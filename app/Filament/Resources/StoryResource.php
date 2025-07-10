@@ -17,7 +17,7 @@ class StoryResource extends Resource
 {
     protected static ?string $model = Story::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-book-open';
 
     public static function form(Form $form): Form
     {
@@ -31,17 +31,6 @@ class StoryResource extends Resource
                     ->required()
                     ->rows(10)
                     ->columnSpanFull(),
-                // Forms\Components\TextInput::make('status')
-                //     ->required()
-                //     ->maxLength(255)
-                //     ->default('waiting for review'),
-                // Forms\Components\TextInput::make('author_id')
-                //     ->required()
-                //     ->numeric(),
-                // Forms\Components\TextInput::make('reviewer_id')
-                //     ->numeric(),
-                // Forms\Components\Textarea::make('feedback')
-                //     ->columnSpanFull(),
             ]);
     }
 
@@ -52,7 +41,15 @@ class StoryResource extends Resource
                 Tables\Columns\TextColumn::make('title')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('status')
-                    ->searchable(),
+                ->badge()
+                ->color(fn(Story $record): string => match ($record->status) {
+                    'waiting for review' => 'warning',
+                    'in review' => 'info',
+                    'approved' => 'success',
+                    'rejected' => 'danger',
+                    'rework' => 'primary',
+                    default => 'secondary',
+                }),
                 Tables\Columns\TextColumn::make('author.name')
                     ->sortable()
                     ->searchable(),
@@ -87,7 +84,9 @@ class StoryResource extends Resource
                 Tables\Actions\Action::make('review')
                     ->label('Review')
                     ->icon('heroicon-o-pencil-square')
-                    ->visible(fn(Story $record) => auth()->user()->hasRole('Reviewer') && $record->status === 'waiting for review')
+                    ->visible(fn(Story $record) => auth()->user()->hasRole('Reviewer') && 
+                    $record->status === 'waiting for review' &&
+                    ($record->reviewer_id === auth()->user()->id || $record->reviewer_id === null))
                     ->requiresConfirmation()
                     ->action(function (Story $record) {
                         $record->update(['status' => 'in review', 'reviewer_id' => auth()->user()->id]);

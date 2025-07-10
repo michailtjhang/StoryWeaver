@@ -17,6 +17,16 @@ class StoryStatsOverview extends BaseWidget
     {
         $stats = $this->getStoryStats();
 
+        // Different stats layout based on user role
+        if ($this->isReviewer()) {
+            return $this->getReviewerStats($stats);
+        }
+
+        return $this->getAuthorAdminStats($stats);
+    }
+
+    protected function getAuthorAdminStats(array $stats): array
+    {
         return [
             Stat::make('Waiting for Review', $stats['waiting_for_review'] ?? 0)
                 ->description('Stories pending review')
@@ -45,16 +55,49 @@ class StoryStatsOverview extends BaseWidget
         ];
     }
 
+    protected function getReviewerStats(array $stats): array
+    {
+        return [
+            Stat::make('Waiting (Unassigned)', $stats['waiting_unassigned'] ?? 0)
+                ->description('Stories waiting for reviewer assignment')
+                ->descriptionIcon('heroicon-o-clock')
+                ->color('warning'),
+
+            Stat::make('Waiting (My Queue)', $stats['waiting_assigned_to_me'] ?? 0)
+                ->description('Stories assigned to me for review')
+                ->descriptionIcon('heroicon-o-inbox')
+                ->color('info'),
+
+            Stat::make('In Review (Mine)', $stats['in_review_by_me'] ?? 0)
+                ->description('Stories I am currently reviewing')
+                ->descriptionIcon('heroicon-o-eye')
+                ->color('primary'),
+
+            Stat::make('Total Reviewed', $stats['total_reviewed_by_me'] ?? 0)
+                ->description('Stories I have reviewed')
+                ->descriptionIcon('heroicon-o-check-circle')
+                ->color('success'),
+        ];
+    }
+
     protected function getStoryStats(): array
     {
         $query = Story::query();
 
-        // Filter by author if user is authenticated and not admin
-        if (auth()->check() && !$this->isAdmin()) {
-            $query->where('author_id', auth()->id());
+        if ($this->isAdmin()) {
+            // Admin sees all stories
+            return $this->getAdminStats($query);
+        } elseif ($this->isReviewer()) {
+            // Reviewer sees stories based on assignment
+            return $this->getReviewerStatsData($query);
+        } else {
+            // Author sees only their own stories
+            return $this->getAuthorStats($query);
         }
+    }
 
-        // Get counts for all statuses in one query
+    protected function getAdminStats(Builder $query): array
+    {
         $results = $query->select([
             DB::raw("COUNT(CASE WHEN status = 'waiting for review' THEN 1 END) as waiting_for_review"),
             DB::raw("COUNT(CASE WHEN status = 'in review' THEN 1 END) as in_review"),
@@ -72,26 +115,50 @@ class StoryStatsOverview extends BaseWidget
         ];
     }
 
-    /**
-     * Alternative method using Laravel collections (if you prefer)
-     */
-    protected function getStoryStatsAlternative(): array
+    protected function getAuthorStats(Builder $query): array
     {
-        $query = Story::query();
+        $query->where('author_id', auth()->id());
 
-        if (auth()->check() && !$this->isAdmin()) {
-            $query->where('author_id', auth()->id());
-        }
-
-        $stories = $query->get(['status']);
-        $grouped = $stories->groupBy('status');
+        $results = $query->select([
+            DB::raw("COUNT(CASE WHEN status = 'waiting for review' THEN 1 END) as waiting_for_review"),
+            DB::raw("COUNT(CASE WHEN status = 'in review' THEN 1 END) as in_review"),
+            DB::raw("COUNT(CASE WHEN status = 'rework' THEN 1 END) as rework"),
+            DB::raw("COUNT(CASE WHEN status = 'approved' THEN 1 END) as approved"),
+            DB::raw("COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed"),
+        ])->first();
 
         return [
-            'waiting_for_review' => $grouped->get('waiting for review', collect())->count(),
-            'in_review' => $grouped->get('in review', collect())->count(),
-            'rework' => $grouped->get('rework', collect())->count(),
-            'approved' => $grouped->get('approved', collect())->count(),
-            'completed' => $grouped->get('completed', collect())->count(),
+            'waiting_for_review' => $results->waiting_for_review,
+            'in_review' => $results->in_review,
+            'rework' => $results->rework,
+            'approved' => $results->approved,
+            'completed' => $results->completed,
+        ];
+    }
+
+    protected function getReviewerStatsData(Builder $query): array
+    {
+        $userId = auth()->id();
+
+        $results = $query->select([
+            // Stories waiting for review with no reviewer assigned
+            DB::raw("COUNT(CASE WHEN status = 'waiting for review' AND reviewer_id IS NULL THEN 1 END) as waiting_unassigned"),
+
+            // Stories waiting for review assigned to current reviewer
+            DB::raw("COUNT(CASE WHEN status = 'waiting for review' AND reviewer_id = {$userId} THEN 1 END) as waiting_assigned_to_me"),
+
+            // Stories currently being reviewed by current reviewer
+            DB::raw("COUNT(CASE WHEN status = 'in review' AND reviewer_id = {$userId} THEN 1 END) as in_review_by_me"),
+
+            // Total stories reviewed by current reviewer (approved + rework + completed)
+            DB::raw("COUNT(CASE WHEN reviewer_id = {$userId} AND status IN ('approved', 'rework', 'completed') THEN 1 END) as total_reviewed_by_me"),
+        ])->first();
+
+        return [
+            'waiting_unassigned' => $results->waiting_unassigned,
+            'waiting_assigned_to_me' => $results->waiting_assigned_to_me,
+            'in_review_by_me' => $results->in_review_by_me,
+            'total_reviewed_by_me' => $results->total_reviewed_by_me,
         ];
     }
 
@@ -108,17 +175,15 @@ class StoryStatsOverview extends BaseWidget
      */
     protected function isAdmin(): bool
     {
-        // Option 1: Using role name
         return auth()->user()->hasRole('Admin');
+    }
 
-        // Option 2: Using role ID (uncomment if you prefer this)
-        // return auth()->user()->role_id === 1;
-
-        // Option 3: Using custom admin field (uncomment if you prefer this)
-        // return auth()->user()->is_admin;
-
-        // Option 4: Using gate/policy (uncomment if you prefer this)
-        // return auth()->user()->can('view-all-stories');
+    /**
+     * Check if current user is reviewer
+     */
+    protected function isReviewer(): bool
+    {
+        return auth()->user()->hasRole('Reviewer');
     }
 
     /**
@@ -128,8 +193,39 @@ class StoryStatsOverview extends BaseWidget
     {
         if ($this->isAdmin()) {
             return 'All Stories Overview';
+        } elseif ($this->isReviewer()) {
+            return 'Review Queue Overview';
         }
 
         return 'My Stories Overview';
+    }
+
+    /**
+     * Alternative method using Laravel collections (if you prefer)
+     */
+    protected function getStoryStatsAlternative(): array
+    {
+        $query = Story::query();
+
+        if ($this->isAdmin()) {
+            // Admin sees all stories
+            $stories = $query->get(['status']);
+        } elseif ($this->isReviewer()) {
+            // Reviewer logic would be more complex here, stick to raw SQL approach
+            return $this->getReviewerStatsData($query);
+        } else {
+            // Author sees only their stories
+            $stories = $query->where('author_id', auth()->id())->get(['status']);
+        }
+
+        $grouped = $stories->groupBy('status');
+
+        return [
+            'waiting_for_review' => $grouped->get('waiting for review', collect())->count(),
+            'in_review' => $grouped->get('in review', collect())->count(),
+            'rework' => $grouped->get('rework', collect())->count(),
+            'approved' => $grouped->get('approved', collect())->count(),
+            'completed' => $grouped->get('completed', collect())->count(),
+        ];
     }
 }
