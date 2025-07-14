@@ -1,61 +1,108 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# StoryWeaver
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+StoryWeaver is a collaborative platform for writing, sharing, and managing stories. Built on Laravel and Filament, it provides an easy-to-use interface for authors, editors, and readers. With StoryWeaver, users can write stories, review and approve drafts, and keep track of their creative journey in a structured way.
 
-## About Laravel
+## Requirements
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+<a href="https://laravel.com/docs/11.x/releases"><img src="https://img.shields.io/badge/laravel-v11-blue" alt="Laravel Version"></a> <a href="https://www.php.net/releases/8.2/en.php"><img src="https://img.shields.io/badge/PHP-v8.2.4-blue" alt="PHP Version"></a> <a href="https://getcomposer.org/download/2.6.5/composer.phar"><img src="https://img.shields.io/badge/Composer-v2.6.5-brown" alt="Composer Version"></a> <a href="https://www.mysql.com/"><img src="https://img.shields.io/badge/MySQL-v8.0-orange" alt="MySQL"></a> <a href="https://filamentphp.com/"><img src="https://img.shields.io/badge/Filament-v3-green" alt="Filament"></a>
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Installation
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+* Download the ZIP file: <a href="https://github.com/michailtjhang/StoryWeaver/archive/refs/heads/main.zip">Click here</a>
+* Or clone the repository via terminal:
 
-## Learning Laravel
+  ```bash
+  git clone https://github.com/michailtjhang/StoryWeaver.git
+  ```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Setup
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+1. Open your terminal and navigate to the project directory.
+2. Copy the `.env.example` file to `.env`:
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+   ```bash
+   cp .env.example .env
+   ```
+3. Install the PHP dependencies:
 
-## Laravel Sponsors
+   ```bash
+   composer install
+   ```
+4. Generate the application key:
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+   ```bash
+   php artisan key:generate
+   ```
 
-### Premium Partners
+### Configure the Database
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+1. Create a new MySQL database.
+2. Update your `.env` file with the database credentials.
+3. Run database migrations:
 
-## Contributing
+   ```bash
+   php artisan migrate
+   ```
+4. (Optional) Seed the database:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+   ```bash
+   php artisan db:seed
+   ```
 
-## Code of Conduct
+### Run the Application
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+1. Start the Laravel server:
 
-## Security Vulnerabilities
+   ```bash
+   php artisan serve
+   ```
+2. For asset compilation (if needed):
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+   ```bash
+   npm install
+   npm run dev
+   ```
 
-## License
+## Features
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Core Features
+
+* **Story Writing**: Authors can create, edit, and manage stories through a modern and simple editor.
+* **Draft Review**: Editors can review submitted drafts, provide feedback, and approve stories for publication.
+* **Category & Tag Management**: Organize stories with categories and tags for better discovery.
+* **User Roles**: Supports multiple roles (Author, Editor, Admin) with different permissions.
+* **Revision History**: Track changes and revisions for each story draft.
+* **Comment System**: Users can comment on stories (optional, based on configuration).
+* **Search & Filter**: Easily find stories by title, author, category, or status.
+* **Dashboard Analytics**: Overview of story stats, user activity, and system health (for Admin).
+
+### Admin & CMS Features
+
+* **Filament Admin Panel**: Clean, responsive backend for managing users, stories, categories, and more.
+* **User Management**: Add, remove, and update user roles and access.
+* **Approval Workflow**: Stories move through statuses (Draft, Waiting for Review, Published, etc.) to streamline editorial flow.
+
+### Additional Features
+
+* **Responsive UI**: Works well on both desktop and mobile.
+* **Notification System**: Alerts users of status changes and comments (via email or in-app notifications, depending on setup).
+* **Export & Backup**: Export stories for backup or external use.
+
+### Non-Functional Requirements
+
+* **Security**: Built on Laravel 11 with best practices for authentication, authorization, and data protection.
+* **Performance**: Uses Laravel’s query builder and cache to keep the platform fast, even with many stories and users.
+* **Accessibility**: UI designed for clarity and accessibility.
+
+## Accounts & Access
+
+* Default roles: Author, Editor, Admin. You can set these up via the admin panel after installation.
+
+## Contribution
+
+Contributions are welcome! Please open an issue or submit a pull request if you have improvements, new features, or bugfixes.
+
+## Author
+
+**Project by Michail Tjhang**
+[https://github.com/michailtjhang](https://github.com/michailtjhang)
